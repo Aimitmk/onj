@@ -1003,6 +1003,13 @@ async def on_ready() -> None:
     """Bot起動時の処理。"""
     print(f"ワンナイト人狼Bot がログインしました: {bot.user}")
     
+    # Botのステータスを設定
+    activity = discord.Activity(
+        type=discord.ActivityType.playing,
+        name="/onj help でヘルプ表示"
+    )
+    await bot.change_presence(status=discord.Status.online, activity=activity)
+    
     # スラッシュコマンドを同期
     try:
         if GUILD_ID:
