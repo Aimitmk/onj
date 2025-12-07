@@ -362,11 +362,11 @@ def determine_execution(state: GameState) -> list[int]:
     """
     処刑対象を決定する。
     
-    最多得票者を処刑する。同票の場合は誰も処刑しない。
-    平和村（-1）が最多得票の場合も誰も処刑しない。
+    最多得票者を処刑する。同票の場合は全員処刑（両吊り）。
+    平和村（-1）が最多得票に含まれる場合は、平和村を除いた同票者を処刑。
     
     Returns:
-        処刑されるプレイヤーのUser IDリスト（0または1人）
+        処刑されるプレイヤーのUser IDリスト（0人以上）
     """
     vote_counts = calculate_votes(state)
     
@@ -381,17 +381,17 @@ def determine_execution(state: GameState) -> list[int]:
     # 最多得票者を取得
     max_voted = [uid for uid, count in vote_counts.items() if count == max_votes]
     
-    # 同票の場合は誰も処刑しない
-    if len(max_voted) > 1:
-        return []
+    # 平和村（-1）を除外
+    max_voted_players = [uid for uid in max_voted if uid != -1]
     
-    # 平和村（-1）が最多得票の場合は誰も処刑しない
-    if max_voted[0] == -1:
+    # 平和村のみが最多得票の場合は誰も処刑しない
+    if not max_voted_players:
         state.executed_player_ids = []
         return []
     
-    state.executed_player_ids = max_voted
-    return max_voted
+    # 同票でも全員処刑（両吊り）
+    state.executed_player_ids = max_voted_players
+    return max_voted_players
 
 
 # =============================================================================
@@ -507,14 +507,14 @@ def get_execution_message(state: GameState) -> str:
     executed_ids = state.executed_player_ids
     
     if not executed_ids:
-        # 平和村が選ばれたか、同票かを判定
+        # 平和村が選ばれたかを判定
         vote_counts = calculate_votes(state)
         max_votes = max(vote_counts.values()) if vote_counts else 0
         max_voted = [uid for uid, count in vote_counts.items() if count == max_votes]
         
-        if -1 in max_voted and len(max_voted) == 1:
+        if -1 in max_voted:
             return "🕊️ **平和村が選ばれました！** 誰も処刑されませんでした。"
-        return "⚖️ **同票のため、誰も処刑されませんでした。**"
+        return "⚖️ **誰も処刑されませんでした。**"
     
     executed_players = [state.get_player(uid) for uid in executed_ids]
     executed_players = [p for p in executed_players if p is not None]
@@ -524,6 +524,10 @@ def get_execution_message(state: GameState) -> str:
     
     names = ", ".join(p.username for p in executed_players)
     roles = ", ".join(p.current_role.value for p in executed_players)
+    
+    # 複数人処刑（両吊り）の場合
+    if len(executed_players) > 1:
+        return f"⚔️ **両吊り！** {names} が処刑されました。\n役職: **{roles}**"
     
     return f"⚖️ **{names}** が処刑されました。\n役職: **{roles}**"
 
