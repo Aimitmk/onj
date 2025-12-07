@@ -308,7 +308,21 @@ class OnenightCommands(app_commands.Group):
             )
             return
         
-        await interaction.response.send_message(MESSAGES["game_begin"])
+        # 役職構成を集計して表示用文字列を作成
+        from collections import Counter
+        role_counts = Counter(role.value for role in role_list)
+        role_composition = "、".join(
+            f"{role}×{count}" if count > 1 else role
+            for role, count in role_counts.items()
+        )
+        
+        await interaction.response.send_message(
+            f"🌙 **ゲームを開始します！**\n\n"
+            f"📋 **役職構成（{len(role_list)}枚）**\n"
+            f"{role_composition}\n"
+            f"（プレイヤー{game.player_count}人 + 中央カード2枚）\n\n"
+            f"各プレイヤーにDMで役職を通知します..."
+        )
         
         # ゲームをセットアップ
         setup_game(game, role_list)
