@@ -403,6 +403,51 @@ class OnenightCommands(app_commands.Group):
         if game.all_voted():
             await end_voting_phase(interaction.channel, game)
     
+    @app_commands.command(name="skip", description="誰も処刑しない（平和村）に投票する")
+    async def skip(self, interaction: discord.Interaction) -> None:
+        """平和村（誰も処刑しない）に投票する。"""
+        channel_id = interaction.channel_id
+        
+        if channel_id is None:
+            await interaction.response.send_message("このチャンネルでは使用できません。", ephemeral=True)
+            return
+        
+        game = get_game(channel_id)
+        
+        if game is None or game.phase != GamePhase.VOTING:
+            await interaction.response.send_message(
+                MESSAGES["wrong_phase"],
+                ephemeral=True
+            )
+            return
+        
+        voter = game.get_player(interaction.user.id)
+        if voter is None:
+            await interaction.response.send_message(
+                MESSAGES["not_in_game"],
+                ephemeral=True
+            )
+            return
+        
+        if voter.vote_target_id is not None:
+            await interaction.response.send_message(
+                MESSAGES["already_voted"],
+                ephemeral=True
+            )
+            return
+        
+        # 平和村投票は vote_target_id を -1 に設定
+        voter.vote_target_id = -1
+        
+        await interaction.response.send_message(
+            f"🕊️ {interaction.user.display_name} さんが **平和村**（誰も処刑しない）に投票しました。"
+            f"（{game.voted_count()}/{game.player_count}）"
+        )
+        
+        # 全員投票完了したら結果発表
+        if game.all_voted():
+            await end_voting_phase(interaction.channel, game)
+    
     @app_commands.command(name="cancel", description="ゲームをキャンセルする（ホストのみ）")
     async def cancel(self, interaction: discord.Interaction) -> None:
         """ゲームをキャンセルする。"""
@@ -764,6 +809,7 @@ async def start_voting_phase(channel: discord.abc.Messageable, game: GameState) 
     await channel.send(
         f"🗳️ **投票フェーズです！**\n\n"
         f"`/onenight vote @プレイヤー` で投票してください。\n"
+        f"`/onenight skip` で **平和村**（誰も処刑しない）に投票できます。\n"
         f"※自分以外のプレイヤーに投票できます。\n\n"
         f"**参加者:**\n{player_list}\n\n"
         f"⏱️ {VOTE_TIMEOUT}秒以内に投票してください。"
@@ -792,6 +838,11 @@ async def end_voting_phase(channel: discord.abc.Messageable, game: GameState) ->
     for player in game.player_list:
         count = vote_counts.get(player.user_id, 0)
         vote_summary_lines.append(f"• {player.username}: {count}票")
+    
+    # 平和村への投票を表示
+    peace_votes = vote_counts.get(-1, 0)
+    if peace_votes > 0:
+        vote_summary_lines.append(f"• 🕊️ 平和村（処刑なし）: {peace_votes}票")
     
     vote_summary = "\n".join(vote_summary_lines)
     

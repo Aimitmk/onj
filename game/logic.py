@@ -343,12 +343,17 @@ def calculate_votes(state: GameState) -> dict[int, int]:
     
     Returns:
         user_idをキー、得票数を値とする辞書
+        -1 は「平和村」（誰も処刑しない）への投票を表す
     """
     vote_counts: dict[int, int] = {p.user_id: 0 for p in state.players.values()}
+    vote_counts[-1] = 0  # 平和村への投票
     
     for player in state.players.values():
         if player.vote_target_id is not None:
-            vote_counts[player.vote_target_id] += 1
+            if player.vote_target_id in vote_counts:
+                vote_counts[player.vote_target_id] += 1
+            elif player.vote_target_id == -1:
+                vote_counts[-1] += 1
     
     return vote_counts
 
@@ -358,6 +363,7 @@ def determine_execution(state: GameState) -> list[int]:
     処刑対象を決定する。
     
     最多得票者を処刑する。同票の場合は誰も処刑しない。
+    平和村（-1）が最多得票の場合も誰も処刑しない。
     
     Returns:
         処刑されるプレイヤーのUser IDリスト（0または1人）
@@ -377,6 +383,11 @@ def determine_execution(state: GameState) -> list[int]:
     
     # 同票の場合は誰も処刑しない
     if len(max_voted) > 1:
+        return []
+    
+    # 平和村（-1）が最多得票の場合は誰も処刑しない
+    if max_voted[0] == -1:
+        state.executed_player_ids = []
         return []
     
     state.executed_player_ids = max_voted
@@ -496,6 +507,13 @@ def get_execution_message(state: GameState) -> str:
     executed_ids = state.executed_player_ids
     
     if not executed_ids:
+        # 平和村が選ばれたか、同票かを判定
+        vote_counts = calculate_votes(state)
+        max_votes = max(vote_counts.values()) if vote_counts else 0
+        max_voted = [uid for uid, count in vote_counts.items() if count == max_votes]
+        
+        if -1 in max_voted and len(max_voted) == 1:
+            return "🕊️ **平和村が選ばれました！** 誰も処刑されませんでした。"
         return "⚖️ **同票のため、誰も処刑されませんでした。**"
     
     executed_players = [state.get_player(uid) for uid in executed_ids]
