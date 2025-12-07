@@ -352,9 +352,36 @@ class OnenightCommands(app_commands.Group):
         # 夜フェーズを開始
         await start_night_phase(interaction.channel, game)
     
+    async def vote_autocomplete(
+        self,
+        interaction: discord.Interaction,
+        current: str,
+    ) -> list[app_commands.Choice[str]]:
+        """投票先のオートコンプリート（ゲーム参加者のみ表示）"""
+        channel_id = interaction.channel_id
+        if channel_id is None:
+            return []
+        
+        game = get_game(channel_id)
+        if game is None or game.phase != GamePhase.VOTING:
+            return []
+        
+        # 自分以外のゲーム参加者をフィルタリング
+        choices = []
+        for player in game.player_list:
+            if player.user_id == interaction.user.id:
+                continue  # 自分自身は除外
+            if current.lower() in player.username.lower():
+                choices.append(
+                    app_commands.Choice(name=player.username, value=str(player.user_id))
+                )
+        
+        return choices[:25]  # Discord の上限は25件
+    
     @app_commands.command(name="vote", description="プレイヤーに投票する")
     @app_commands.describe(player="投票先のプレイヤー")
-    async def vote(self, interaction: discord.Interaction, player: discord.Member) -> None:
+    @app_commands.autocomplete(player=vote_autocomplete)
+    async def vote(self, interaction: discord.Interaction, player: str) -> None:
         """プレイヤーに投票する。"""
         channel_id = interaction.channel_id
         
@@ -386,7 +413,25 @@ class OnenightCommands(app_commands.Group):
             )
             return
         
-        target = game.get_player(player.id)
+        # player はユーザーIDの文字列
+        try:
+            target_id = int(player)
+        except ValueError:
+            # 名前で検索を試みる
+            target = None
+            for p in game.player_list:
+                if p.username.lower() == player.lower():
+                    target = p
+                    break
+            if target is None:
+                await interaction.response.send_message(
+                    MESSAGES["invalid_target"],
+                    ephemeral=True
+                )
+                return
+            target_id = target.user_id
+        
+        target = game.get_player(target_id)
         if target is None:
             await interaction.response.send_message(
                 MESSAGES["invalid_target"],
@@ -394,14 +439,14 @@ class OnenightCommands(app_commands.Group):
             )
             return
         
-        if interaction.user.id == player.id:
+        if interaction.user.id == target_id:
             await interaction.response.send_message(
                 MESSAGES["cannot_vote_self"],
                 ephemeral=True
             )
             return
         
-        if not register_vote(game, interaction.user.id, player.id):
+        if not register_vote(game, interaction.user.id, target_id):
             await interaction.response.send_message(
                 "⚠️ 投票に失敗しました。",
                 ephemeral=True
@@ -409,7 +454,7 @@ class OnenightCommands(app_commands.Group):
             return
         
         await interaction.response.send_message(
-            f"✅ {interaction.user.display_name} さんが投票しました。"
+            f"✅ {interaction.user.display_name} さんが **{target.username}** に投票しました。"
             f"（{game.voted_count()}/{game.player_count}）"
         )
         
