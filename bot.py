@@ -476,7 +476,7 @@ class OnenightCommands(app_commands.Group):
             return
         
         await interaction.response.send_message(
-            f"✅ {interaction.user.display_name} さんが **{target.username}** に投票しました。"
+            f"✅ {interaction.user.display_name} さんが投票しました。"
             f"（{game.voted_count()}/{game.player_count}）"
         )
         
@@ -521,7 +521,7 @@ class OnenightCommands(app_commands.Group):
         voter.vote_target_id = -1
         
         await interaction.response.send_message(
-            f"🕊️ {interaction.user.display_name} さんが **平和村**（誰も処刑しない）に投票しました。"
+            f"✅ {interaction.user.display_name} さんが投票しました。"
             f"（{game.voted_count()}/{game.player_count}）"
         )
         
