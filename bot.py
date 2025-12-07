@@ -534,6 +534,45 @@ class OnenightCommands(app_commands.Group):
         
         end_game(channel_id)
         await interaction.response.send_message("❌ ゲームがキャンセルされました。")
+    
+    @app_commands.command(name="help", description="コマンド一覧と遊び方を表示する")
+    async def help(self, interaction: discord.Interaction) -> None:
+        """ヘルプを表示する。"""
+        help_text = """🐺 **ワンナイト人狼 ヘルプ**
+
+**【コマンド一覧】**
+`/onj start` - ゲームの参加者募集を開始
+`/onj join` - ゲームに参加
+`/onj leave` - ゲームから離脱
+`/onj players` - 参加者一覧を表示
+`/onj begin` - ゲームを開始（ホストのみ）
+`/onj vote <プレイヤー>` - プレイヤーに投票
+`/onj skip` - 平和村（誰も処刑しない）に投票
+`/onj cancel` - ゲームをキャンセル（ホストのみ）
+`/onj help` - このヘルプを表示
+
+**【遊び方】**
+1️⃣ `/onj start` でゲームを開始し、参加者を募集
+2️⃣ 参加者は `/onj join` で参加（3〜6人）
+3️⃣ ホストが `/onj begin` でゲーム開始
+4️⃣ 各プレイヤーにDMで役職が通知される
+5️⃣ 夜フェーズ：役職に応じてDMで行動
+6️⃣ 昼フェーズ：議論後、投票で処刑者を決定
+7️⃣ 結果発表！
+
+**【役職】**
+🧑‍🌾 **村人** - 特殊能力なし
+🐺 **人狼** - 仲間の人狼を確認できる
+🔮 **占い師** - 他プレイヤー1人 or 中央カード2枚を見る
+🦹 **怪盗** - 他プレイヤーとカードを交換
+🎭 **吊り人** - 自分が処刑されれば単独勝利
+
+**【勝利条件】**
+• **村人陣営**: 人狼を1人以上処刑する
+• **人狼陣営**: 人狼が処刑されない
+• **吊り人**: 自分が処刑される（単独勝利）"""
+        
+        await interaction.response.send_message(help_text, ephemeral=True)
 
 
 # コマンドグループをBotに追加
