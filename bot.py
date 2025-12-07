@@ -826,15 +826,9 @@ async def start_voting_phase(channel: discord.abc.Messageable, game: GameState) 
         f"`/onj skip` で **平和村**（誰も処刑しない）に投票できます。\n"
         f"※自分以外のプレイヤーに投票できます。\n\n"
         f"**参加者:**\n{player_list}\n\n"
-        f"⏱️ {VOTE_TIMEOUT}秒以内に投票してください。"
+        f"全員の投票が完了すると結果が発表されます。"
     )
-    
-    # 投票タイムアウトを設定
-    await asyncio.sleep(VOTE_TIMEOUT)
-    
-    # まだ投票中なら終了
-    if game.phase == GamePhase.VOTING:
-        await end_voting_phase(channel, game)
+    # 全員の投票を待つ（タイムアウトなし）
 
 
 async def end_voting_phase(channel: discord.abc.Messageable, game: GameState) -> None:
