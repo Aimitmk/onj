@@ -90,6 +90,28 @@ def end_game(channel_id: int) -> None:
         del games[channel_id]
 
 
+def reset_game_keep_players(game: GameState) -> None:
+    """ゲームをリセットし、参加者は保持する（再戦用）。"""
+    from game.models import Role
+    
+    # 各プレイヤーの状態をリセット
+    for player in game.players.values():
+        player.initial_role = Role.VILLAGER  # 仮の役職
+        player.current_role = Role.VILLAGER
+        player.night_action = None
+        player.has_acted = False
+        player.vote_target_id = None
+    
+    # ゲーム状態をリセット
+    game.phase = GamePhase.WAITING
+    game.center_cards.clear()
+    game.current_night_role = None
+    game.night_action_order.clear()
+    game.night_action_index = 0
+    game.executed_player_ids.clear()
+    game.winners.clear()
+
+
 async def send_role_dm(user: discord.User, player: Player) -> bool:
     """プレイヤーにDMで役職を通知する。"""
     try:
@@ -959,13 +981,16 @@ async def end_voting_phase(channel: discord.abc.Messageable, game: GameState) ->
         f"\n📋 **最終役職一覧**\n\n{get_final_roles_message(game)}"
     )
     
-    # ゲームを終了
-    channel_id = game.channel_id
-    end_game(channel_id)
+    # ゲームをリセット（参加者は保持）
+    reset_game_keep_players(game)
     
+    player_names = ", ".join(p.username for p in game.player_list)
     await channel.send(
-        "\n🎮 ゲームが終了しました！\n"
-        "新しいゲームを始めるには `/onj start` を使用してください。"
+        f"\n🎮 **ゲームが終了しました！**\n\n"
+        f"**現在の参加者（{game.player_count}人）**: {player_names}\n\n"
+        f"• `/onj begin` - 同じメンバーで再戦\n"
+        f"• `/onj join` / `/onj leave` - 参加者を変更\n"
+        f"• `/onj cancel` - 募集を終了"
     )
 
 
