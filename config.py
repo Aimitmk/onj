@@ -95,7 +95,7 @@ VOTE_TIMEOUT = 60
 
 MESSAGES = {
     # ゲーム開始関連
-    "game_started": "🐺 **ワンナイト人狼** の参加者を募集中！\n`/onenight join` で参加してください。\n現在の参加者: {count}人",
+    "game_started": "🐺 **ワンナイト人狼** の参加者を募集中！\n`/onj join` で参加してください。\n現在の参加者: {count}人",
     "player_joined": "✅ {player} さんが参加しました！（現在 {count}人）",
     "player_left": "❌ {player} さんが離脱しました。（現在 {count}人）",
     "game_begin": "🌙 ゲームを開始します！各プレイヤーにDMで役職を通知します...",
@@ -112,7 +112,7 @@ MESSAGES = {
     
     # 昼フェーズ
     "day_start": "☀️ **朝になりました！**\n{time}秒間、自由に議論してください。\n議論終了後、投票フェーズに移ります。",
-    "vote_start": "🗳️ **投票フェーズです！**\n`/onenight vote @プレイヤー` で投票してください。\n※自分以外のプレイヤーに投票できます。",
+    "vote_start": "🗳️ **投票フェーズです！**\n`/onj vote @プレイヤー` で投票してください。\n※自分以外のプレイヤーに投票できます。",
     "vote_received": "✅ {player} さんが投票しました。（{voted}/{total}）",
     
     # 結果発表

@@ -2,7 +2,7 @@
 ワンナイト人狼 Discord Bot
 
 エントリーポイント。Discord Botの起動とコマンド定義を行う。
-スラッシュコマンド（/onenight）を使用。
+スラッシュコマンド（/onj）を使用。
 """
 
 import os
@@ -113,7 +113,7 @@ class OnenightCommands(app_commands.Group):
     """ワンナイト人狼のコマンドグループ"""
     
     def __init__(self):
-        super().__init__(name="onenight", description="ワンナイト人狼のコマンド")
+        super().__init__(name="onj", description="ワンナイト人狼のコマンド")
     
     @app_commands.command(name="start", description="ゲームの参加者募集を開始する")
     async def start(self, interaction: discord.Interaction) -> None:
@@ -139,10 +139,10 @@ class OnenightCommands(app_commands.Group):
         
         await interaction.response.send_message(
             f"🐺 **ワンナイト人狼** の参加者を募集中！\n"
-            f"`/onenight join` で参加してください。\n"
+            f"`/onj join` で参加してください。\n"
             f"現在の参加者: 1人 ({interaction.user.display_name})\n\n"
             f"参加者が {MIN_PLAYERS}〜{MAX_PLAYERS}人 になったら、\n"
-            f"ホストは `/onenight begin` でゲームを開始できます。"
+            f"ホストは `/onj begin` でゲームを開始できます。"
         )
     
     @app_commands.command(name="join", description="ゲームに参加する")
@@ -158,7 +158,7 @@ class OnenightCommands(app_commands.Group):
         
         if game is None or game.phase != GamePhase.WAITING:
             await interaction.response.send_message(
-                "⚠️ 現在参加募集中のゲームがありません。`/onenight start` で開始してください。",
+                "⚠️ 現在参加募集中のゲームがありません。`/onj start` で開始してください。",
                 ephemeral=True
             )
             return
@@ -808,8 +808,8 @@ async def start_voting_phase(channel: discord.abc.Messageable, game: GameState) 
     
     await channel.send(
         f"🗳️ **投票フェーズです！**\n\n"
-        f"`/onenight vote @プレイヤー` で投票してください。\n"
-        f"`/onenight skip` で **平和村**（誰も処刑しない）に投票できます。\n"
+        f"`/onj vote @プレイヤー` で投票してください。\n"
+        f"`/onj skip` で **平和村**（誰も処刑しない）に投票できます。\n"
         f"※自分以外のプレイヤーに投票できます。\n\n"
         f"**参加者:**\n{player_list}\n\n"
         f"⏱️ {VOTE_TIMEOUT}秒以内に投票してください。"
@@ -873,7 +873,7 @@ async def end_voting_phase(channel: discord.abc.Messageable, game: GameState) ->
     
     await channel.send(
         "\n🎮 ゲームが終了しました！\n"
-        "新しいゲームを始めるには `/onenight start` を使用してください。"
+        "新しいゲームを始めるには `/onj start` を使用してください。"
     )
 
 
